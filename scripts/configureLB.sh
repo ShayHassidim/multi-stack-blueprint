@@ -3,6 +3,7 @@
 set -e
 
 export CLOUDIFY_LB_NAME=httpd
+export LB_IP_ADDR=10.8.1.88
 
 node_type=$(ctx node type)
 
