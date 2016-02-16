@@ -2,6 +2,8 @@
 
 set -e
 
+export CLOUDIFY_WS_NAME=tomcat
+
 node_type=$(ctx node type)
 
 ctx logger info "configure ${node_type} BEGIN"
@@ -15,6 +17,6 @@ if [ -z "$CLOUDIFY_WS_NAME_INSTALLED" ] ; then
         exit 2
 fi
 
-yum -q -y install "$CLOUDIFY_WS_NAME"
+sudo yum -q -y install "$CLOUDIFY_WS_NAME"
 
 ctx logger info "configure ${node_type} COMPLETED"
