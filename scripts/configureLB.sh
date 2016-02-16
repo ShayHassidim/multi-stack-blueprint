@@ -2,6 +2,8 @@
 
 set -e
 
+export CLOUDIFY_LB_NAME=httpd
+
 node_type=$(ctx node type)
 
 ctx logger info "configure ${node_type} BEGIN"
