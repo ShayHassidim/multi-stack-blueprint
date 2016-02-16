@@ -2,4 +2,4 @@
 multi-stack-blueprint
 
 This blueprint includes the following:
-![blueprint](bp.png "blueprint")
+![blueprint](bp.jpg "blueprint")
