@@ -9,8 +9,6 @@ node_type=$(ctx node type)
 
 ctx logger info "configure ${node_type} BEGIN"
 
-. ./nameLB.sh
-
 CLOUDIFY_LB_NAME_INSTALLED=`rpm -qa | grep $CLOUDIFY_LB_NAME`
 
 if [ -z "$CLOUDIFY_LB_NAME_INSTALLED" ] ; then
