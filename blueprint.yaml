@@ -1,0 +1,159 @@
+tosca_definitions_version: cloudify_dsl_1_2
+imports:
+  - 'http://www.getcloudify.org/spec/cloudify/3.3/types.yaml'
+  - 'http://getcloudify.org.s3.amazonaws.com/spec/puppet-plugin/1.3/plugin.yaml'
+  - 'http://www.getcloudify.org/spec/openstack-plugin/1.3/plugin.yaml'
+  - 'http://getcloudify.org.s3.amazonaws.com/spec/host-pool-plugin/1.3/plugin.yaml'
+  - 'http://getcloudify.org.s3.amazonaws.com/spec/fabric-plugin/1.3/plugin.yaml'
+  - 'http://getcloudify.org.s3.amazonaws.com/spec/docker-plugin/1.3/plugin.yaml'
+  - 'http://www.getcloudify.org/spec/diamond-plugin/1.3/plugin.yaml'
+  - 'http://getcloudify.org.s3.amazonaws.com/spec/chef-plugin/1.3/plugin.yaml'
+  - 'http://getcloudify.org.s3.amazonaws.com/spec/aws-plugin/1.3/plugin.yaml'
+plugins: {}
+node_types: {}
+
+inputs:
+  Compute-WebServer-IP:
+    type: string
+    default: "10.8.1.85"
+  Compute-APP-Server-IP:
+    type: string
+    default: "10.8.1.85"
+  Compute-LB-IP:
+    type: string
+    default: "10.8.1.88"
+  Compute-DB-IP:
+    type: string
+    default: "10.8.1.86"
+  WEB_SERVER_PORT:
+    default: 6000
+node_templates:
+  Compute-WebServer:
+    type: cloudify.nodes.Compute
+    instances:
+      deploy: 2
+    properties:
+      ip: { get_input: Compute-WebServer-IP }
+      cloudify_agent:
+        user: centos
+        key: /home/centos/work/shay-cloudify.pem
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: Compute-APP-Server
+    interfaces:
+      ###########################################################
+      # We are infact telling cloudify to install a diamond
+      # monitoring agent on the server.
+      #
+      # (see https://github.com/BrightcoveOS/Diamond)
+      ###########################################################
+      cloudify.interfaces.monitoring_agent:
+        install:
+          implementation: diamond.diamond_agent.tasks.install
+          inputs:
+            diamond_config:
+              interval: 1
+        start: diamond.diamond_agent.tasks.start
+        stop: diamond.diamond_agent.tasks.stop
+        uninstall: diamond.diamond_agent.tasks.uninstall
+      cloudify.interfaces.monitoring:
+        start:
+          implementation: diamond.diamond_agent.tasks.add_collectors
+          inputs:
+            collectors_config:
+                CPUCollector: {}
+                MemoryCollector: {}
+                LoadAverageCollector: {}
+                DiskUsageCollector:
+                  config:
+                    devices: x?vd[a-z]+[0-9]*$
+                NetworkCollector: {}
+  Compute-APP-Server:
+    type: cloudify.nodes.Compute
+    instances:
+      deploy: 2
+    properties:
+      ip: { get_input: Compute-APP-Server-IP }
+      cloudify_agent:
+        user: centos
+        key: /home/centos/work/shay-cloudify.pem
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: Compute-DB
+  Compute-DB:
+    type: cloudify.nodes.Compute
+    instances:
+      deploy: 2
+    properties:
+      ip: { get_input: Compute-DB-IP }
+      cloudify_agent:
+        user: centos
+        key: /home/centos/work/shay-cloudify.pem
+    relationships: []
+  Compute-LB:
+    type: cloudify.nodes.Compute
+    instances:
+      deploy: 1
+    properties:
+      ip: { get_input: Compute-LB-IP }
+      cloudify_agent:
+        user: centos
+        key: /home/centos/work/shay-cloudify.pem
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: Compute-WebServer
+  APPServer-JBoss:
+    type: cloudify.nodes.ApplicationServer
+    instances:
+      deploy: 2
+    properties:
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: Compute-APP-Server
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure: scripts/configureAPPServer.sh
+        start: scripts/startAPPServer.sh
+        stop: scripts/stopAPPServer.sh
+  WebServer-Tomcat:
+    type: cloudify.nodes.WebServer
+    instances:
+      deploy: 2
+    properties:
+      port:  { get_input: WEB_SERVER_PORT }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: Compute-WebServer
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure: scripts/configureWebServer.sh
+        start: scripts/startWebServer.sh
+        stop: scripts/stopWebServer.sh
+  DBMS:
+    type: cloudify.nodes.DBMS
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: Compute-DB
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure: scripts/configureDB.sh
+        start: scripts/startDB.sh
+        stop: scripts/stopDB.sh
+  LoadBalancer:
+    type: cloudify.nodes.LoadBalancer
+    instances:
+      deploy: 1
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: Compute-LB
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create: {}
+        configure: scripts/configureLB.sh
+        start: scripts/startLB.sh
+        stop: scripts/stopLB.sh
+        delete: {}
+      cloudify.interfaces.validation:
+        creation: {}
+        deletion: {}
+relationships: {}
