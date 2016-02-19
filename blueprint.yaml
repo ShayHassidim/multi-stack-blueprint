@@ -22,7 +22,10 @@ inputs:
   Compute-LB-IP:
     type: string
     default: "10.8.1.88"
-  Compute-DB-IP:
+  Compute-DB-Master-IP:
+    type: string
+    default: "10.8.1.86"
+  Compute-DB-Slave-IP:
     type: string
     default: "10.8.1.86"
   WEB_SERVER_PORT:
@@ -68,12 +71,22 @@ node_templates:
                   config:
                     devices: x?vd[a-z]+[0-9]*$
                 NetworkCollector: {}
-  Compute-DB:
+  Compute-DB-Master:
     type: cloudify.nodes.Compute
     instances:
       deploy: 1
     properties:
-      ip: { get_input: Compute-DB-IP }
+      ip: { get_input: Compute-DB-Master-IP }
+      cloudify_agent:
+        user: centos
+        key: /home/centos/work/shay-cloudify.pem
+    relationships: []
+  Compute-DB-Slave:
+    type: cloudify.nodes.Compute
+    instances:
+      deploy: 1
+    properties:
+      ip: { get_input: Compute-DB-Slave-IP }
       cloudify_agent:
         user: centos
         key: /home/centos/work/shay-cloudify.pem
@@ -89,7 +102,9 @@ node_templates:
         key: /home/centos/work/shay-cloudify.pem
     relationships:
       - type: cloudify.relationships.connected_to
-        target: Compute-DB
+        target: Compute-DB-Master
+      - type: cloudify.relationships.connected_to
+        target: Compute-DB-Slave
   Compute-LB:
     type: cloudify.nodes.Compute
     instances:
@@ -129,11 +144,21 @@ node_templates:
         configure: scripts/configureWebServer.sh
         start: scripts/startWebServer.sh
         stop: scripts/stopWebServer.sh
-  DBMS:
+  DBMS-Master:
     type: cloudify.nodes.DBMS
     relationships:
       - type: cloudify.relationships.contained_in
-        target: Compute-DB
+        target: Compute-DB-Master
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure: scripts/configureDB.sh
+        start: scripts/startDB.sh
+        stop: scripts/stopDB.sh
+  DBMS-Slave:
+    type: cloudify.nodes.DBMS
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: Compute-DB-Slave
     interfaces:
       cloudify.interfaces.lifecycle:
         configure: scripts/configureDB.sh
