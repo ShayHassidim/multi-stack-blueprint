@@ -68,6 +68,16 @@ node_templates:
                   config:
                     devices: x?vd[a-z]+[0-9]*$
                 NetworkCollector: {}
+  Compute-DB:
+    type: cloudify.nodes.Compute
+    instances:
+      deploy: 1
+    properties:
+      ip: { get_input: Compute-DB-IP }
+      cloudify_agent:
+        user: centos
+        key: /home/centos/work/shay-cloudify.pem
+    relationships: []
   Compute-APP-Server:
     type: cloudify.nodes.Compute
     instances:
@@ -80,16 +90,6 @@ node_templates:
     relationships:
       - type: cloudify.relationships.connected_to
         target: Compute-DB
-  Compute-DB:
-    type: cloudify.nodes.Compute
-    instances:
-      deploy: 1
-    properties:
-      ip: { get_input: Compute-DB-IP }
-      cloudify_agent:
-        user: centos
-        key: /home/centos/work/shay-cloudify.pem
-    relationships: []
   Compute-LB:
     type: cloudify.nodes.Compute
     instances:
@@ -149,7 +149,12 @@ node_templates:
     interfaces:
       cloudify.interfaces.lifecycle:
         create: {}
-        configure: scripts/configureLB.sh
+        configure: 
+          implementation: scripts/configureLB.sh
+          inputs:
+            process:
+              env:
+                LB_HOST_IP: { get_input: Compute-LB-IP }
         start: scripts/startLB.sh
         stop: scripts/stopLB.sh
         delete: {}
