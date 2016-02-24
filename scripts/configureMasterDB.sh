@@ -21,19 +21,19 @@ STANDBY_ARCHIVE=/export/database/archive
 ARCHIVE_GROUP_ID=609
 ARCHIVE_GROUP=archive
 
-ctx logger info PGINSTALLDIR:$PGINSTALLDIR
-ctx logger info PGSQLCONF:$PGSQLCONF
-ctx logger info PGHBACONF:$PGHBACONF
-ctx logger info DBMASTER:$DBMASTER
-ctx logger info LOCALHOST:$LOCALHOST
-ctx logger info DBSTANDBY:$DBSTANDBY
-ctx logger info DBPORT:$DBPORT
-ctx logger info DBUSER:$DBUSER
-ctx logger info REPUSER:$REPUSER
-ctx logger info MASTER_ARCHIVE:$MASTER_ARCHIVE
+ctx logger info "PGINSTALLDIR:$PGINSTALLDIR"
+ctx logger info "PGSQLCONF:$PGSQLCONF"
+ctx logger info "PGHBACONF:$PGHBACONF"
+ctx logger info "DBMASTER:$DBMASTER"
+ctx logger info "LOCALHOST:$LOCALHOST"
+ctx logger info "DBSTANDBY:$DBSTANDBY"
+ctx logger info "DBPORT:$DBPORT"
+ctx logger info "DBUSER:$DBUSER"
+ctx logger info "REPUSER:$REPUSER"
+ctx logger info "MASTER_ARCHIVE:$MASTER_ARCHIVE"
 
-ctx logger info ARCHIVE_GROUP_ID:$ARCHIVE_GROUP_ID
-ctx logger info ARCHIVE_GROUP:$ARCHIVE_GROUP
+ctx logger info "ARCHIVE_GROUP_ID:$ARCHIVE_GROUP_ID"
+ctx logger info "ARCHIVE_GROUP:$ARCHIVE_GROUP"
 
 ### postgres section ###
 
@@ -53,22 +53,22 @@ systemctl enable postgresql
 
 # add note local parameters
 ctx logger info "setting local parameters"
-su - $DBUSER -c "ctx logger info \# local parameters >> $PGINSTALLDIR/$PGSQLCONF"
-su - $DBUSER -c "ctx logger info listen_addresses = \'$LOCALHOST,$DBMASTER\' >> $PGINSTALLDIR/$PGSQLCONF"
-su - $DBUSER -c "ctx logger info password_encryption = \'on\' >> $PGINSTALLDIR/$PGSQLCONF"
-su - $DBUSER -c "ctx logger info \# replication configuration >> $PGINSTALLDIR/$PGSQLCONF" 
-su - $DBUSER -c "ctx logger info archive_mode = \'on\' >> $PGINSTALLDIR/$PGSQLCONF"
-su - $DBUSER -c "ctx logger info wal_level = \'hot_standby\' >> $PGINSTALLDIR/$PGSQLCONF"
-su - $DBUSER -c "ctx logger info max_wal_senders = \'4\' >> $PGINSTALLDIR/$PGSQLCONF"
-su - $DBUSER -c "ctx logger info archive_command = \'cp -i %p $MASTER_ARCHIVE/%f\' >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo \# local parameters >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo listen_addresses = \'$LOCALHOST,$DBMASTER\' >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo password_encryption = \'on\' >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo \# replication configuration >> $PGINSTALLDIR/$PGSQLCONF" 
+su - $DBUSER -c "echo archive_mode = \'on\' >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo wal_level = \'hot_standby\' >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo max_wal_senders = \'4\' >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo archive_command = \'cp -i %p $MASTER_ARCHIVE/%f\' >> $PGINSTALLDIR/$PGSQLCONF"
 
 # set authorization/access
-ctx logger info "setting local access"
-su - $DBUSER -c "ctx logger info \# replication user access >> $PGINSTALLDIR/$PGHBACONF"
-su - $DBUSER -c "ctx logger info host    replication    $REPUSER             $DBSTANDBY/32       trust >> $PGINSTALLDIR/$PGHBACONF"
-su - $DBUSER -c "ctx logger info host    all            $REPUSER             $DBSTANDBY/32       md5 >> $PGINSTALLDIR/$PGHBACONF"
-su - $DBUSER -c "ctx logger info host    replication    $REPUSER             $DBMASTER/32        trust >> $PGINSTALLDIR/$PGHBACONF"
-su - $DBUSER -c "ctx logger info host    all            $REPUSER             $DBMASTER/32        md5 >> $PGINSTALLDIR/$PGHBACONF"
+echo "setting local access"
+su - $DBUSER -c "echo \# replication user access >> $PGINSTALLDIR/$PGHBACONF"
+su - $DBUSER -c "echo host    replication    $REPUSER             $DBSTANDBY/32       trust >> $PGINSTALLDIR/$PGHBACONF"
+su - $DBUSER -c "echo host    all            $REPUSER             $DBSTANDBY/32       md5 >> $PGINSTALLDIR/$PGHBACONF"
+su - $DBUSER -c "echo host    replication    $REPUSER             $DBMASTER/32        trust >> $PGINSTALLDIR/$PGHBACONF"
+su - $DBUSER -c "echo host    all            $REPUSER             $DBMASTER/32        md5 >> $PGINSTALLDIR/$PGHBACONF"
 
 ## nfs mount section ###
 
@@ -93,7 +93,7 @@ chown -R root:$ARCHIVE_GROUP $MASTER_ARCHIVE && chmod -R g+rwx $MASTER_ARCHIVE
 
 # modify /etc/fstab
 ctx logger info "modifying fstab"
-ctx logger info  "$DBSTANDBY:$STANDBY_ARCHIVE $MASTER_ARCHIVE nfs defaults,vers=3 0 0" >> /etc/fstab
+echo  "$DBSTANDBY:$STANDBY_ARCHIVE $MASTER_ARCHIVE nfs defaults,vers=3 0 0" >> /etc/fstab
 
 # disable or pinhole firewalld
 ctx logger info "disabling fiewall"
@@ -127,7 +127,5 @@ su - $DBUSER -c "createuser --login --replication $REPUSER"
 
 ctx logger info "setting replication user password"
 su - $DBUSER -c "psql -c \"alter user $REPUSER with password '$REPPASS';\""
-
-ctx logger info "done"
 
 ctx logger info "configure ${node_type} COMPLETED"
