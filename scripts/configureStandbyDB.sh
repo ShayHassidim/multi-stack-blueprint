@@ -19,16 +19,16 @@ DBUSER=postgres
 REPUSER=dekker
 REPPASS=replicant
 
-ctx logger info PGINSTALLDIR:$PGINSTALLDIR
-ctx logger info PGRECCONF:$PGRECCONF
-ctx logger info DBMASTER:$DBMASTER
-ctx logger info LOCALHOST:$LOCALHOST
-ctx logger info DBSTANDBY:$DBSTANDBY
-ctx logger info STANDBY_ARCHIVE:$STANDBY_ARCHIVE
-ctx logger info ARCHIVE_GROUP:$ARCHIVE_GROUP
-ctx logger info DBPORT:$DBPORT
-ctx logger info DBUSER:$DBUSER
-ctx logger info REPUSER:$REPUSER
+ctx logger info "PGINSTALLDIR:$PGINSTALLDIR"
+ctx logger info "PGRECCONF:$PGRECCONF"
+ctx logger info "DBMASTER:$DBMASTER"
+ctx logger info "LOCALHOST:$LOCALHOST"
+ctx logger info "DBSTANDBY:$DBSTANDBY"
+ctx logger info "STANDBY_ARCHIVE:$STANDBY_ARCHIVE"
+ctx logger info "ARCHIVE_GROUP:$ARCHIVE_GROUP"
+ctx logger info "DBPORT:$DBPORT"
+ctx logger info "DBUSER:$DBUSER"
+ctx logger info "REPUSER:$REPUSER"
 
 # install nfs-kernel
 ctx logger info "installing nfs"
@@ -48,7 +48,7 @@ chown -R root:$ARCHIVE_GROUP $STANDBY_ARCHIVE && chmod -R g+wx $STANDBY_ARCHIVE
 
 # add to exports 
 ctx logger info "creating export"
-ctx logger info "$STANDBY_ARCHIVE    $DB_MASTER_IP_ADDR/24(rw,sync)" >> /etc/exports
+echo "$STANDBY_ARCHIVE    $DB_MASTER_IP_ADDR/24(rw,sync)" >> /etc/exports
 
 # restart nfs/portmap 
 ctx logger info "restarting nfs"
@@ -93,18 +93,18 @@ ctx logger info "copying $PGSQLCONF back to $PGINSTALLDIR"
 su - $DBUSER -c "cp /tmp/$PGSQLCONF $PGINSTALLDIR/$PGSQLCONF"
 
 ctx logger info "setting local parameters"
-su - $DBUSER -c "ctx logger info \# local parameters >> $PGINSTALLDIR/$PGSQLCONF"
-su - $DBUSER -c "ctx logger info listen_addresses = \'$LOCALHOST,$DBMASTER\' >> $PGINSTALLDIR/$PGSQLCONF"
-su - $DBUSER -c "ctx logger info password_encryption = \'on\' >> $PGINSTALLDIR/$PGSQLCONF"
-su - $DBUSER -c "ctx logger info \# standby parameters >> $PGINSTALLDIR/$PGSQLCONF"
-su - $DBUSER -c "ctx logger info hot_standby = \'on\'  >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo \# local parameters >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo listen_addresses = \'$LOCALHOST,$DBMASTER\' >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo password_encryption = \'on\' >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo \# standby parameters >> $PGINSTALLDIR/$PGSQLCONF"
+su - $DBUSER -c "echo hot_standby = \'on\'  >> $PGINSTALLDIR/$PGSQLCONF"
 
 # create recovery.conf
 ctx logger info "creating $PGRECCONF"
-su - $DBUSER -c "ctx logger info standby_mode = \'on\' >> $PGINSTALLDIR/$PGRECCONF"
-su - $DBUSER -c "ctx logger info primary_conninfo = \'host=$DBMASTER port=$DBPORT user=$REPUSER password=$DBPASS\' >> $PGINSTALLDIR/$PGRECCONF"
-su - $DBUSER -c "ctx logger info restore_command = \'cp $STANDBY_ARCHIVE/%f %p\' >> $PGINSTALLDIR/$PGRECCONF"
-su - $DBUSER -c "ctx logger info archive_cleanup_command = \'pg_archivecleanup $STANDBY_ARCHIVE %r\' >> $PGINSTALLDIR/$PGRECCONF"
+su - $DBUSER -c "echo standby_mode = \'on\' >> $PGINSTALLDIR/$PGRECCONF"
+su - $DBUSER -c "echo primary_conninfo = \'host=$DBMASTER port=$DBPORT user=$REPUSER password=$DBPASS\' >> $PGINSTALLDIR/$PGRECCONF"
+su - $DBUSER -c "echo restore_command = \'cp $STANDBY_ARCHIVE/%f %p\' >> $PGINSTALLDIR/$PGRECCONF"
+su - $DBUSER -c "echo archive_cleanup_command = \'pg_archivecleanup $STANDBY_ARCHIVE %r\' >> $PGINSTALLDIR/$PGRECCONF"
 
 # start the database
 ctx logger info "starting postgresql"
