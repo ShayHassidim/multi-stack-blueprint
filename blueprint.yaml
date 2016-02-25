@@ -151,7 +151,7 @@ node_templates:
         target: Compute-DB-Master
     interfaces:
       cloudify.interfaces.lifecycle:
-        configure: scripts/configureDB.sh
+        configure: scripts/configureMasterDB.sh
         start: scripts/startDB.sh
         stop: scripts/stopDB.sh
   DBMS-Slave:
@@ -161,7 +161,7 @@ node_templates:
         target: Compute-DB-Slave
     interfaces:
       cloudify.interfaces.lifecycle:
-        configure: scripts/configureDB.sh
+        configure: scripts/configureStandbyDB.sh
         start: scripts/startDB.sh
         stop: scripts/stopDB.sh
   LoadBalancer:
