@@ -9,9 +9,9 @@ ctx logger info "configure ${node_type} BEGIN"
 PGINSTALLDIR=/var/lib/pgsql/data
 PGSQLCONF=postgresql.conf
 PGRECCONF=recovery.conf
-DBMASTER=10.0.0.30
+#DBMASTER=10.0.0.30
 LOCALHOST=127.0.0.1
-DBSTANDBY=10.0.0.35
+#DBSTANDBY=10.0.0.35
 STANDBY_ARCHIVE=/export/database/archive
 ARCHIVE_GROUP=archive
 DBPORT=5432
