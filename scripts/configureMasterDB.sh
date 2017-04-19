@@ -9,9 +9,9 @@ ctx logger info "configure ${node_type} BEGIN"
 PGINSTALLDIR=/var/lib/pgsql/data
 PGSQLCONF=postgresql.conf
 PGHBACONF=pg_hba.conf
-DBMASTER=10.0.0.30
+#DBMASTER=10.0.0.30
 LOCALHOST=127.0.0.1
-DBSTANDBY=10.0.0.35
+#DBSTANDBY=10.0.0.35
 DBPORT=5432
 DBUSER=postgres
 REPUSER=dekker
