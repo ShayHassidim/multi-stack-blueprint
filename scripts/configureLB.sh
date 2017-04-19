@@ -3,7 +3,9 @@
 set -e
 
 export CLOUDIFY_LB_NAME=httpd
-export LB_IP_ADDR=10.8.1.88
+#export LB_HOST_IP=10.8.1.88
+
+ctx logger info "configure ${node_type} on ${CLOUDIFY_LB_NAME} "
 
 node_type=$(ctx node type)
 
@@ -27,6 +29,6 @@ export HTTPD_CONF="/etc/httpd/conf/httpd.conf"
 
 sudo yum -q -y install "$CLOUDIFY_LB_NAME"
 
-sudo sed -i 's/ServerName\ www\.example\.com\:80/ServerName\ www\.example\.com\:80\nServerName\ '"$LB_IP_ADDR"':80/' $HTTPD_CONF
+sudo sed -i 's/ServerName\ www\.example\.com\:80/ServerName\ www\.example\.com\:80\nServerName\ '"$LB_HOST_IP"':80/' $HTTPD_CONF
 
 ctx logger info "configure ${node_type} COMPLETED"
