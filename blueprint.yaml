@@ -139,7 +139,13 @@ node_templates:
         target: Compute-DB-Master
     interfaces:
       cloudify.interfaces.lifecycle:
-        configure: scripts/configureMasterDB.sh
+        configure: 
+            implementation: scripts/configureMasterDB.sh
+            inputs:
+              process:
+                env:
+                  DBMASTER: { get_input: Compute-DB-Master-IP }
+                  DBSTANDBY: { get_input: Compute-DB-Slave-IP }         
         start: scripts/startDB.sh
         stop: scripts/stopDB.sh
   DBMS-Slave:
@@ -149,7 +155,13 @@ node_templates:
         target: Compute-DB-Slave
     interfaces:
       cloudify.interfaces.lifecycle:
-        configure: scripts/configureStandbyDB.sh
+        configure: 
+            implementation: scripts/configureStandbyDB.sh
+            inputs:
+              process:
+                env:
+                  DBMASTER: { get_input: Compute-DB-Master-IP }
+                  DBSTANDBY: { get_input: Compute-DB-Slave-IP }                
         start: scripts/startDB.sh
         stop: scripts/stopDB.sh
   LoadBalancer:
